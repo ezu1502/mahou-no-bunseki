@@ -1,8 +1,10 @@
-__pycache__/
 *.pyc
-.venv/
-venv/
-dist/
-build/
-*.egg-info/
-.vscode/
+__pycache__/
+
+/build/
+
+*.exe
+*.pdb
+
+*.mp3
+*.wav
