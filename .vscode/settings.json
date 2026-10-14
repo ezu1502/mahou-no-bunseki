@@ -1,9 +1,12 @@
 {
     "files.exclude": {
-        // ".gitignore": true,
+        ".gitignore": true,
         ".gitattributes": true,
         ".vscode/c_cpp_properties.json": true,
         "build/": true,
         "external/": true,
+        // "**/*.exe": true,
+        "**/*.pdb": true,
+        "**/*.ps1": true,
     }
 }

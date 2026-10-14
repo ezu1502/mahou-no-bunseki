@@ -4,7 +4,10 @@ project(Bunseki LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(main bunseki/bunseki.cpp)
+add_executable(main
+    bunseki/main.cpp
+    bunseki/sample_reader.cpp
+)
 
 set_target_properties(main PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
