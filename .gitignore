@@ -5,6 +5,10 @@ __pycache__/
 
 *.exe
 *.pdb
+*.pyd
 
 *.mp3
 *.wav
+
+.vscode/
+.venv/

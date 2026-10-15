@@ -6,54 +6,28 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
-
-using Complex = std::complex<double>;
-
-const double PI = std::numbers::pi;
-
-class Transform {
-public:
-    Transform(std::vector<float> samples, std::uint64_t frame_count);
-
-    std::vector<float> samples;
-
-
-    std::uint64_t frame_count;
-
-    std::vector<Complex> dft();
-
-    std::vector<Complex> fft();
-
-
-    const std::vector<float>& mono_samples();
-
-
-private:
-    bool empty();
-
-    std::vector<float> _mono_samples;
-        std::vector<Complex> fft(const std::vector<Complex>& samps);
-};
-
-const std::vector<float>& Transform::mono_samples(){
-    if (samples.empty()){
-        return samples;
-    }
-
-    if (_mono_samples.empty()){
-        std::vector<float> mono;
-
-        for (std::size_t i = 0; i + 1 < samples.size(); i+=2){
-            mono.push_back((samples[i] + samples[i + 1]) / 2);
-        }
-
-        _mono_samples = std::move(mono);
-    }   
-    return _mono_samples;
-}
+#include "transform.hpp"
 
 Transform::Transform(std::vector<float> samples, std::uint64_t frame_count) :
     samples(std::move(samples)), frame_count(frame_count){}
+
+
+
+const std::vector<float>& Transform::mono_samples() {
+    if (samples.empty())
+        return samples;
+
+    if (_mono_samples.empty()) {
+        std::vector<float> mono;
+
+        for (std::size_t i = 0; i + 1 < samples.size(); i += 2)
+            mono.push_back((samples[i] + samples[i + 1]) / 2);
+
+        _mono_samples = std::move(mono);
+    }
+
+    return _mono_samples;
+}
 
 std::vector<Complex> Transform::dft(){
     auto mono = mono_samples(); 
@@ -162,7 +136,7 @@ std::vector<Complex> Transform::fft(const std::vector<Complex>& samps){ // info 
 
 
 
-int main(){
+/* int main(){
     std::vector<float> s = {1, 1, 2, 2, 3, 3, 4, 4};
     std::uint64_t f = 2;
 
@@ -183,4 +157,4 @@ int main(){
     for (const auto& value : cev){
         std::cout << value << "\n";
     }
-}
+} */

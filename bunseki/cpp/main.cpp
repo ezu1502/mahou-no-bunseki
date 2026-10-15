@@ -7,7 +7,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    auto result = helpers::read_samples(argv[1]);
+    auto result = read_samples(argv[1]);
 
     if (!result){
         std::cerr << result.error() << "\n";
