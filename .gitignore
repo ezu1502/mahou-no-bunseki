@@ -1,14 +1,10 @@
-*.pyc
-__pycache__/
-
 /build/
+.vscode/
 
 *.exe
-*.pdb
-*.pyd
+*pdb
 
 *.mp3
+*.flac
 *.wav
 
-.vscode/
-.venv/
