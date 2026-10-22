@@ -2,6 +2,10 @@
 #include <utility>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <stdexcept>
+
+constexpr std::int64_t SAMPLE_RATE = 44100;
 
 class Analysis {
 public:
@@ -15,11 +19,9 @@ public:
     float peak_amplitude();
     float zero_crossing_rate();
 
-    // todo silence detection
-    // todo slicer
-};
+    std::vector<std::pair<float, float>> silence_detection(float threshold = 0.01); 
 
-//todo transform
+};
 
 Analysis::Analysis(const std::vector<float>& samples) : samples(samples), frame_count(this->samples.size()){}
 
@@ -83,4 +85,35 @@ float Analysis::zero_crossing_rate(){
     }
 
     return crosses / static_cast<float>(samples.size() - 1);
+}
+
+std::vector<std::pair<float, float>> Analysis::silence_detection(float threshold){
+    if (threshold <= 0){
+        throw std::invalid_argument("Threshold must be non-negative!");
+    }
+    using Interval = std::pair<float, float>;
+
+    std::vector<Interval> result;
+    std::int64_t open_silence_index = -1;
+
+    for (std::size_t i = 0; i < samples.size(); i++){
+        if (std::abs(samples[i]) <= threshold){
+            if (open_silence_index < 0){
+                open_silence_index = i;
+            }
+        }
+        else {
+            if (open_silence_index >= 0){
+                result.emplace_back((open_silence_index) / static_cast<float>(SAMPLE_RATE), i / static_cast<float>(SAMPLE_RATE));
+                open_silence_index = -1;
+            }
+        }
+    }
+
+    if (open_silence_index >= 0){
+        result.emplace_back(open_silence_index / static_cast<float>(SAMPLE_RATE), samples.size() / static_cast<float>(SAMPLE_RATE));
+    }
+
+
+    return result;
 }
