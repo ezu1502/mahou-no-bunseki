@@ -1,5 +1,4 @@
-#include "sample_reader.hpp"
-
+#include <bunseki/sample_reader.hpp>
 
 std::expected<std::vector<float>, std::string> read_samples(const std::string& song_path){
     if (song_path.empty()){

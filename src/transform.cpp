@@ -4,18 +4,12 @@
 #include <numbers>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 
-constexpr std::int64_t SAMPLE_RATE = 44100;
-using Complex = std::complex<float>;
-using ComplexVec = std::vector<Complex>;
-
-constexpr double PI = std::numbers::pi;
+#include <bunseki/transform.hpp>
 
 bool is_power_of_two(std::size_t number){
     return number > 0 && (number & (number - 1)) == 0;
 }
-
 void apply_hann_window(std::vector<float>& vec){
     std::size_t len = vec.size();
 
@@ -27,36 +21,7 @@ void apply_hann_window(std::vector<float>& vec){
         float wn = 0.5f * (1.0f - std::cos((2.0f * PI * n) / (len - 1)));
         vec[n] *= wn;
     }
-}   
-
-struct FrequencyBin {
-    float frequency;
-    float magnitude;
-};
-
-
-class Transform {
-public:
-    Transform(const std::vector<float>& samples);
-
-    const std::vector<float>& samples; // já recebe convertida pra mono
-    std::size_t frame_count;
-
-    ComplexVec dft();
-    ComplexVec fft();
-    std::vector<ComplexVec> stft(int window_size, int hop_size);
-
-    std::vector<FrequencyBin> fft_frequencies();
-    std::vector<FrequencyBin> fft_frequencies(const ComplexVec& vec);
-
-    std::vector<std::vector<FrequencyBin>> stft_frequencies(int window_size, int hop_size);
-
-    float central_spectroid();
-    float central_spectroid(const ComplexVec& fft_result);
-
-private:
-    ComplexVec fft_auxiliar(const std::vector<float>& vec);
-};
+} 
 
 Transform::Transform(const std::vector<float>& samples) : samples(samples), frame_count(this->samples.size()){}
 
@@ -245,11 +210,11 @@ std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(int window_si
     return result;
 }
 
-float Transform::central_spectroid(){
-    return central_spectroid(fft());
+float Transform::spectral_centroid(){
+    return spectral_centroid(fft());
 }
 
-float Transform::central_spectroid(const ComplexVec& vec){
+float Transform::spectral_centroid(const ComplexVec& vec){
 
     if (vec.empty()){
         throw std::invalid_argument("FFT result cannot be empty!");
@@ -276,27 +241,4 @@ float Transform::central_spectroid(const ComplexVec& vec){
     }
 
     return numerator / denominator;
-}
-
-int main(){
-    std::vector<float> samples = {
-        0.0000f,  0.7071f,  1.0000f,  0.7071f,
-        0.0000f, -0.7071f, -1.0000f, -0.7071f,
-        0.0000f,  0.7071f,  1.0000f,  0.7071f,
-        0.0000f, -0.7071f, -1.0000f, -0.7071f,
-        0.0000f,  0.7071f,  1.0000f,  0.7071f,
-        0.0000f, -0.7071f, -1.0000f, -0.7071f,
-        0.0000f,  0.7071f,  1.0000f,  0.7071f,
-        0.0000f, -0.7071f, -1.0000f, -0.7071f
-    };
-
-    Transform t(samples);
-
-    auto tr = t.fft_frequencies();
-
-    for (auto bin : tr){
-        std::cout << "Frequency: " << bin.frequency
-          << ", Magnitude: " << bin.magnitude << '\n';
-    }
-    
 }

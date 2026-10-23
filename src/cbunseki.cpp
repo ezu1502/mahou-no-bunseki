@@ -1,5 +1,4 @@
-#include <vector>
-#include <utility>
+#include <bunseki/cbunseki.hpp>
 
 std::vector<float> samples_to_mono(std::vector<float> samples){
     std::vector<float> result;
@@ -12,13 +11,9 @@ std::vector<float> samples_to_mono(std::vector<float> samples){
     return result;
 }
 
-class CBunseki {
-public:
-    CBunseki(std::vector<float> samples);
-
-    std::vector<float> samples;
-    std::size_t frame_count;
-};
-
 CBunseki::CBunseki(std::vector<float> samples) :
-    samples(samples_to_mono(std::move(samples))), frame_count(this->samples.size()){}
+    samples(samples_to_mono(std::move(samples))),
+    frame_count(this->samples.size()),
+    analysis(this->samples),
+    transform(this->samples)
+{}

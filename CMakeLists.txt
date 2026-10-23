@@ -8,12 +8,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(buntest
     src/main.cpp
     src/sample_reader.cpp
+    src/analysis.cpp
+    src/transform.cpp
+    src/cbunseki.cpp
     external/miniaudio.cpp
 )
 
 target_include_directories(buntest PRIVATE
     src
     external
+    include
 )
 
 set_target_properties(buntest PROPERTIES

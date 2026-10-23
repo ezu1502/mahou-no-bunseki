@@ -4,38 +4,26 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
+#include <iostream>
 
-constexpr std::int64_t SAMPLE_RATE = 44100;
-
-class Analysis {
-public:
-    Analysis(const std::vector<float>& samples);
-
-    const std::vector<float>& samples; // já recebe convertida pra mono
-    std::size_t frame_count;
-
-    float rms();
-    float p2p_amplitude();
-    float peak_amplitude();
-    float zero_crossing_rate();
-
-    std::vector<std::pair<float, float>> silence_detection(float threshold = 0.01); 
-
-};
+#include <bunseki/analysis.hpp>
 
 Analysis::Analysis(const std::vector<float>& samples) : samples(samples), frame_count(this->samples.size()){}
 
 float Analysis::rms(){
-    if (samples.empty()){
+    return rms(samples);
+}
+
+float Analysis::rms(const std::vector<float>& vec){
+    if (vec.empty()){
         return 0.0f;
     }
-
     double sum = 0.0;
-    for (float sample : samples){
+    for (float sample : vec){
         sum += (sample * sample);
     }
 
-    return std::sqrt(sum / frame_count);
+    return std::sqrt(sum / vec.size());
 }
 
 float Analysis::p2p_amplitude(){
@@ -89,7 +77,7 @@ float Analysis::zero_crossing_rate(){
 
 std::vector<std::pair<float, float>> Analysis::silence_detection(float threshold){
     if (threshold <= 0){
-        throw std::invalid_argument("Threshold must be non-negative!");
+        throw std::invalid_argument("Threshold must be greater than 0");
     }
     using Interval = std::pair<float, float>;
 
@@ -117,3 +105,75 @@ std::vector<std::pair<float, float>> Analysis::silence_detection(float threshold
 
     return result;
 }
+
+std::vector<float> Analysis::rms_windows(std::size_t window_size, std::size_t hop_size){
+    if (window_size == 0 || hop_size == 0){
+        throw std::invalid_argument("Window size and hop size must be positive values");
+    }
+    if (samples.empty()){
+        throw std::runtime_error("Samples is empty!");
+    }
+
+    std::vector<float> result;
+
+    for (std::size_t i = 0, len = samples.size(); i <= len && window_size <= len - i; i += hop_size){
+        std::vector<float> window(
+            samples.begin() + i,
+            samples.begin() + i + window_size
+        );
+
+        result.push_back(rms(std::move(window)));
+    }
+
+    return result;
+}
+
+
+std::vector<std::size_t> Analysis::onset_detection(float threshold){
+    return onset_detection(samples, threshold);
+}
+
+std::vector<std::size_t> Analysis::onset_detection(const std::vector<float>& rms_values, float threshold){
+    if (rms_values.empty()){
+        throw std::runtime_error("rms_values is empty!");
+    }
+    if (threshold <= 0){
+        throw std::invalid_argument("Threshold must be a positive value");
+    }
+
+    std::vector<std::size_t> result;
+    
+    for (std::size_t i = 1, len = rms_values.size(); i < len; i++){
+        if ((rms_values[i] - rms_values[i-1] > threshold) && (result.empty() || i - result.back() >= 2)){
+            result.push_back(i);
+        }
+    }
+
+    return result;
+}
+
+std::vector<std::size_t> onset_intervals(const std::vector<std::size_t>& onsets){
+    std::vector<std::size_t> intervals;
+
+    for (std::size_t i = 1; i < onsets.size(); i++){
+        intervals.push_back(onsets[i] - onsets[i-1]);
+    }
+
+    return intervals;
+}
+/* 
+float bpm(const std::vector<std::size_t>& intervals, std::size_t hop_size){
+    if (intervals.empty() || hop_size == 0){
+        throw std::invalid_argument("Intervals and hop size must be valid");
+    }
+
+    float sum = 0;
+
+    for (auto interval : intervals){
+        sum += interval;
+    }
+
+    float mean = sum / intervals.size();
+
+    return 60 * SAMPLE_RATE / (mean * hop_size);
+} */
