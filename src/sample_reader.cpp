@@ -1,6 +1,9 @@
 #include <bunseki/sample_reader.hpp>
+#include <utility>
 
-std::expected<std::vector<float>, std::string> read_samples(const std::string& song_path){
+#include <bunseki/buntools.hpp>
+
+std::expected<std::vector<float>, std::string> read_samples(const std::string& song_path, bool to_mono){
     if (song_path.empty()){
         return std::unexpected("Song path is empty!");
     }
@@ -42,5 +45,12 @@ std::expected<std::vector<float>, std::string> read_samples(const std::string& s
 
     ma_decoder_uninit(&decoder);
 
-    return samples;
+    if (to_mono){
+        return buntools::samples_to_mono(std::move(samples));
+    }
+
+    else {
+        return samples;
+    }
+   
 }

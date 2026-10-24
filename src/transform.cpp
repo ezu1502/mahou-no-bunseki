@@ -6,22 +6,8 @@
 #include <cstdint>
 
 #include <bunseki/transform.hpp>
+#include <bunseki/buntools.hpp>
 
-bool is_power_of_two(std::size_t number){
-    return number > 0 && (number & (number - 1)) == 0;
-}
-void apply_hann_window(std::vector<float>& vec){
-    std::size_t len = vec.size();
-
-    if (len <= 1){
-        throw std::invalid_argument("Hann window cannot be applied in a vector smaller than 2");
-    }
-
-    for (std::size_t n = 0; n < len; n++){
-        float wn = 0.5f * (1.0f - std::cos((2.0f * PI * n) / (len - 1)));
-        vec[n] *= wn;
-    }
-} 
 
 Transform::Transform(const std::vector<float>& samples) : samples(samples), frame_count(this->samples.size()){}
 
@@ -128,7 +114,7 @@ std::vector<ComplexVec> Transform::stft(int window_size, int hop_size){
         throw std::invalid_argument("hop_size must be positive and window_size must be at least 2");
     }
 
-    if (!is_power_of_two(window_size)){
+    if (!buntools::is_power_of_two(window_size)){
         throw std::invalid_argument("window_size must be a power of 2");
     }
     
@@ -140,7 +126,7 @@ std::vector<ComplexVec> Transform::stft(int window_size, int hop_size){
             samples.begin() + i + window_size
         );
 
-        apply_hann_window(window);
+        buntools::apply_hann_window(window);
 
         result.push_back(fft_auxiliar(window));
     }

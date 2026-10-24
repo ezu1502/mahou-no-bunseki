@@ -128,11 +128,14 @@ std::vector<float> Analysis::rms_windows(std::size_t window_size, std::size_t ho
     return result;
 }
 
-std::vector<std::size_t> Analysis::onset_detection(float threshold){
-    return onset_detection(samples, threshold);
+// TEMPO
+
+
+std::vector<std::size_t> Analysis::onset_detection(float threshold, int min_spacing){
+    return onset_detection(rms_windows(1024, 441), threshold, min_spacing);
 }
 
-std::vector<std::size_t> Analysis::onset_detection(const std::vector<float>& rms_values, float threshold){
+std::vector<std::size_t> Analysis::onset_detection(const std::vector<float>& rms_values, float threshold, int min_spacing){
     if (rms_values.empty()){
         throw std::runtime_error("rms_values is empty!");
     }
@@ -143,7 +146,7 @@ std::vector<std::size_t> Analysis::onset_detection(const std::vector<float>& rms
     std::vector<std::size_t> result;
     
     for (std::size_t i = 1, len = rms_values.size(); i < len; i++){
-        if ((rms_values[i] - rms_values[i-1] > threshold) && (result.empty() || i - result.back() >= 2)){
+        if ((rms_values[i] - rms_values[i-1] > threshold) && (result.empty() || i - result.back() >= min_spacing)){
             result.push_back(i);
         }
     }
@@ -151,7 +154,7 @@ std::vector<std::size_t> Analysis::onset_detection(const std::vector<float>& rms
     return result;
 }
 
-std::vector<std::size_t> onset_intervals(const std::vector<std::size_t>& onsets){
+std::vector<std::size_t> Analysis::onset_intervals(const std::vector<std::size_t>& onsets){
     std::vector<std::size_t> intervals;
 
     for (std::size_t i = 1; i < onsets.size(); i++){
@@ -160,8 +163,8 @@ std::vector<std::size_t> onset_intervals(const std::vector<std::size_t>& onsets)
 
     return intervals;
 }
-/* 
-float bpm(const std::vector<std::size_t>& intervals, std::size_t hop_size){
+
+float Analysis::bpm(const std::vector<std::size_t>& intervals, std::size_t hop_size){
     if (intervals.empty() || hop_size == 0){
         throw std::invalid_argument("Intervals and hop size must be valid");
     }
@@ -174,5 +177,21 @@ float bpm(const std::vector<std::size_t>& intervals, std::size_t hop_size){
 
     float mean = sum / intervals.size();
 
+    if (mean == 0){
+        return 0.0f;
+    }
+
     return 60 * SAMPLE_RATE / (mean * hop_size);
-} */
+} 
+
+float Analysis::bpm(){
+    auto onsets = onset_detection(0.05f, 5); // magic numbers, cuidado
+
+    if (onsets.size() < 2){
+        return 0.0f;
+    }
+
+    auto intervals = onset_intervals(onsets);
+
+    return bpm(intervals, 441);
+}

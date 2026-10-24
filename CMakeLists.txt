@@ -11,6 +11,7 @@ add_executable(buntest
     src/analysis.cpp
     src/transform.cpp
     src/cbunseki.cpp
+    src/buntools.cpp
     external/miniaudio.cpp
 )
 
