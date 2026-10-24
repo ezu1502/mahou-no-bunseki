@@ -29,7 +29,7 @@ void test_one(const std::string& song_name, const std::unordered_map<std::string
         return;
     }
 
-    auto samples = result.value();
+    auto samples = std::move(result).value();
 
     CBunseki bunseki(std::move(samples));
 
@@ -61,7 +61,7 @@ void test_all(const std::unordered_map<std::string, int>& dataset){
             continue;
         }
 
-        auto samples = result.value();
+        auto samples = std::move(result).value();
 
         CBunseki bunseki(std::move(samples));
 
@@ -87,6 +87,9 @@ void test_all(const std::unordered_map<std::string, int>& dataset){
     std::println("Mean Absolute Error: {}BPM | {:.3f}%", error_bpm / evaluated, error_percent / evaluated);
 }
 
+// em caso de erro, verifique se talvez tem um \ufeff no nome do arquivo
+
+
 
 int main(){
     std::cout << "Loading database...\n";
@@ -95,5 +98,12 @@ int main(){
 
     std::cout << "Database Loaded!\n";
 
+    const auto start = buntools::perf_counter();
+
     test_one("elf", dataset);
+
+    const auto end = buntools::perf_counter();
+
+    std::println("Elapsed: {:.3f}s", (end - start) / 1000);
+
 }
