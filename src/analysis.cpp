@@ -20,7 +20,7 @@ float Analysis::rms(const std::vector<float>& vec){
     }
     double sum = 0.0;
     for (float sample : vec){
-        sum += (sample * sample);
+        sum += (static_cast<double>(sample) * sample);
     }
 
     return std::sqrt(sum / vec.size());
@@ -127,7 +127,6 @@ std::vector<float> Analysis::rms_windows(std::size_t window_size, std::size_t ho
 
     return result;
 }
-
 
 std::vector<std::size_t> Analysis::onset_detection(float threshold){
     return onset_detection(samples, threshold);

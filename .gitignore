@@ -8,3 +8,5 @@
 *.flac
 *.wav
 
+*.env
+.venv/

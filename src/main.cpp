@@ -16,5 +16,8 @@ int main(){
 
     CBunseki bunseki(std::move(samples));
 
-    std::cout << bunseki.analysis.rms();
+    std::cout << bunseki.analysis.rms() << " RMS\n";
+    std::cout << bunseki.frame_count << " Mono Samples\n";
+    std::cout << bunseki.analysis.peak_amplitude() << " Peak Amplitude\n";
+
 }
