@@ -1,9 +1,11 @@
 /build/
 .vscode/
+.vs/
 
 *.exe
 *pdb
 
+test_tracks/
 *.mp3
 *.flac
 *.wav

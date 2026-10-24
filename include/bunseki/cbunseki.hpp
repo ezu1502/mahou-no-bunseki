@@ -11,7 +11,10 @@ public:
     explicit CBunseki(std::vector<float> samples);
 
     std::vector<float> samples;
-    std::size_t frame_count;
+    
+    std::size_t frame_count() const {
+        return this->samples.size();
+    }
 
     Analysis analysis;
     Transform transform;

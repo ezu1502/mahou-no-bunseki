@@ -5,6 +5,7 @@
 #include <numbers>
 #include <cstdint>
 #include <iostream>
+#include <cstddef>
 
 #include <bunseki/buntools.hpp>
 
@@ -23,22 +24,24 @@ public:
 
     const std::vector<float>& samples; // já recebe convertida pra mono
 
-    ComplexVec dft();
+    ComplexVec dft() const;
 
-    ComplexVec fft();
-    std::vector<FrequencyBin> fft_frequencies();
+    ComplexVec fft() const;
+    std::vector<FrequencyBin> fft_frequencies() const;
 
 
-    std::vector<ComplexVec> stft(int window_size, int hop_size);
-    std::vector<std::vector<FrequencyBin>> stft_frequencies(int window_size, int hop_size);
+    std::vector<ComplexVec> stft(int window_size, int hop_size) const;
+    std::vector<std::vector<FrequencyBin>> stft_frequencies(int window_size, int hop_size) const;
 
-    float spectral_centroid();
+    float spectral_centroid() const;
 
 private:
-    std::size_t frame_count;
+    std::size_t frame_count() const {
+        return this->samples.size();
+    }
 
-    ComplexVec fft_auxiliar(const std::vector<float>& vec);
+    ComplexVec fft_auxiliar(const std::vector<float>& vec) const;
 
-    std::vector<FrequencyBin> fft_frequencies(const ComplexVec& vec);
-    float spectral_centroid(const ComplexVec& fft_result);
+    std::vector<FrequencyBin> fft_frequencies(const ComplexVec& vec) const;
+    float spectral_centroid(const ComplexVec& fft_result) const;
 };

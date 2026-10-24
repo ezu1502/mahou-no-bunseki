@@ -9,9 +9,9 @@
 #include <bunseki/buntools.hpp>
 
 
-Transform::Transform(const std::vector<float>& samples) : samples(samples), frame_count(this->samples.size()){}
+Transform::Transform(const std::vector<float>& samples) : samples(samples){}
 
-ComplexVec Transform::dft(){
+ComplexVec Transform::dft() const{
     if (samples.empty()){
         throw std::runtime_error("Samples is empty!");
     }
@@ -35,7 +35,7 @@ ComplexVec Transform::dft(){
     return result;
 }
 
-ComplexVec Transform::fft(){
+ComplexVec Transform::fft() const{
     // PADDING 
 
     if (samples.empty()){
@@ -62,7 +62,7 @@ ComplexVec Transform::fft(){
     return fft_auxiliar(padded);
 }
 
-ComplexVec Transform::fft_auxiliar(const std::vector<float>& vec){
+ComplexVec Transform::fft_auxiliar(const std::vector<float>& vec) const{
     if (vec.size() == 1){
         return {Complex(vec[0], 0.0f)};
     }
@@ -105,7 +105,7 @@ ComplexVec Transform::fft_auxiliar(const std::vector<float>& vec){
     return result;
 }
 
-std::vector<ComplexVec> Transform::stft(int window_size, int hop_size){
+std::vector<ComplexVec> Transform::stft(int window_size, int hop_size) const{
     if (samples.empty()){
         throw std::runtime_error("Samples is empty!");
     }
@@ -135,7 +135,7 @@ std::vector<ComplexVec> Transform::stft(int window_size, int hop_size){
 }
 
 
-std::vector<FrequencyBin> Transform::fft_frequencies(){
+std::vector<FrequencyBin> Transform::fft_frequencies() const{
     ComplexVec fft_result = fft();
 
     std::vector<FrequencyBin> result;
@@ -156,7 +156,7 @@ std::vector<FrequencyBin> Transform::fft_frequencies(){
     return result;
 }
 
-std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec){
+std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec) const{
     /*
         This one receives a valid FFT
     */
@@ -183,7 +183,7 @@ std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec){
 }
 
 
-std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(int window_size, int hop_size){
+std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(int window_size, int hop_size) const{
     std::vector<ComplexVec> windows = stft(window_size, hop_size);
 
     std::vector<std::vector<FrequencyBin>> result;
@@ -196,11 +196,11 @@ std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(int window_si
     return result;
 }
 
-float Transform::spectral_centroid(){
+float Transform::spectral_centroid() const{
     return spectral_centroid(fft());
 }
 
-float Transform::spectral_centroid(const ComplexVec& vec){
+float Transform::spectral_centroid(const ComplexVec& vec) const{
 
     if (vec.empty()){
         throw std::invalid_argument("FFT result cannot be empty!");
