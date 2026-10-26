@@ -1,6 +1,9 @@
 #include <bunseki/sample_reader.hpp>
 #include <utility>
 
+#include <miniaudio.h>
+
+
 #include <bunseki/buntools.hpp>
 
 std::expected<std::vector<float>, std::string> read_samples(const std::string& song_path, bool to_mono){
