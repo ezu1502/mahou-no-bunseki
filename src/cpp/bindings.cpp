@@ -11,11 +11,35 @@
 #include <complex>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pybunseki, m){
+// TODO continuar aqui! eu parei nos bindings, tô organizando a pasta src/ pra conseguir ir testando e expandindo o bunseki
+
+PYBIND11_MODULE(_pybunseki, m){
     m.doc() = "Python bindings for Bunseki";
+
+    auto buntools_m = m.def_submodule("buntools");
+
+    buntools_m.def("is_power_of_two", &buntools::is_power_of_two, py::arg("number"));
+    buntools_m.def("samples_to_mono", &buntools::samples_to_mono, py::arg("samples"));
+    buntools_m.def(
+        "generate_sine_wave", &buntools::generate_sine_wave,
+        py::arg("frequency"),
+        py::arg("time"),
+        py::arg("sample_rate") = 44100
+    ); 
+
+    buntools_m.def("read_dataset", &buntools::read_dataset, py::arg("csv_path"));
+
+    auto constants_m = buntools_m.def_submodule("constants");
+
+    constants_m.attr("SAMPLE_RATE") = SAMPLE_RATE;
+    constants_m.attr("PI") = PI;
+    constants_m.attr("STANDARD_WINDOW_SIZE") = STANDARD_WINDOW_SIZE;
+    constants_m.attr("STANDARD_HOP_SIZE") = STANDARD_HOP_SIZE;
+
 
     m.def(
         "read_samples",
@@ -23,7 +47,7 @@ PYBIND11_MODULE(pybunseki, m){
             auto result = read_samples(song_path, to_mono);
 
             if (!result){
-                return py::none();
+                throw std::runtime_error(result.error());
             }
 
             return py::cast(*result);
@@ -38,7 +62,6 @@ PYBIND11_MODULE(pybunseki, m){
         
 
     py::class_<Analysis>(m, "Analysis")
-        // .def(py::init<const std::vector<float>&>(), py::arg("samples"))
         .def("rms", static_cast<float (Analysis::*)() const>(&Analysis::rms))
         .def("p2p_amplitude", &Analysis::p2p_amplitude)
         .def("peak_amplitude", &Analysis::peak_amplitude)
@@ -110,11 +133,13 @@ PYBIND11_MODULE(pybunseki, m){
         .def(py::init<std::vector<float>>(), py::arg("samples"))
 
         .def_readonly("samples", &CBunseki::samples)
+
         .def_property_readonly("frame_count", &CBunseki::frame_count)
 
-        .def_readonly("analysis", &CBunseki::analysis)
-        .def_readonly("transform", &CBunseki::transform);
-
+        .def_readonly("analysis", &CBunseki::analysis, py::return_value_policy::reference_internal)
+        .def_readonly("transform", &CBunseki::transform, py::return_value_policy::reference_internal);
+        // esse py::return_value_policy::reference_internal mantém o objeto pai vivo enquanto os filhos estiverem sendo usados.
+        // isso garante que não haja problemas de memória decorrentes de todos usarem referências para o mesmo objeto samples
 }
 
 

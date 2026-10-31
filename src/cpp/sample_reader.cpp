@@ -48,6 +48,10 @@ std::expected<std::vector<float>, std::string> read_samples(const std::string& s
 
     ma_decoder_uninit(&decoder);
 
+    if (samples.empty()){
+        return std::unexpected("Audio file contains no samples!");
+    }
+
     if (to_mono){
         return buntools::samples_to_mono(std::move(samples));
     }

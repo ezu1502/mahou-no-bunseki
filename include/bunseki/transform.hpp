@@ -13,6 +13,7 @@ using Complex = std::complex<float>;
 using ComplexVec = std::vector<Complex>;
 
 
+
 struct FrequencyBin {
     float frequency;
     float magnitude;

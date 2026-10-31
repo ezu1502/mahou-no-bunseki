@@ -12,21 +12,21 @@ find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
 add_library(bunseki STATIC
-    src/sample_reader.cpp
-    src/analysis.cpp
-    src/transform.cpp
-    src/cbunseki.cpp
-    src/buntools.cpp
+    src/cpp/sample_reader.cpp
+    src/cpp/analysis.cpp
+    src/cpp/transform.cpp
+    src/cpp/cbunseki.cpp
+    src/cpp/buntools.cpp
     external/miniaudio.cpp
 )
 
 target_include_directories(bunseki
     PUBLIC include
-    PRIVATE src external
+    PRIVATE src/cpp external
 )
 
 add_executable(buntest
-    src/main.cpp
+    src/cpp/main.cpp
 )
 
 set_target_properties(buntest PROPERTIES
@@ -37,8 +37,24 @@ set_target_properties(buntest PROPERTIES
 
 target_link_libraries(buntest PRIVATE bunseki)
 
-pybind11_add_module(pybunseki
-    src/bindings.cpp
+pybind11_add_module(_pybunseki
+    src/cpp/bindings.cpp
 )
 
-target_link_libraries(pybunseki PRIVATE bunseki)
+set_target_properties(_pybunseki PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/python/bunseki"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/python/bunseki"
+
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/src/python/bunseki"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/src/python/bunseki"
+
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/python/bunseki"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/python/bunseki"
+)
+
+target_link_libraries(_pybunseki PRIVATE bunseki)
+
+install(TARGETS _pybunseki
+    LIBRARY DESTINATION bunseki
+    RUNTIME DESTINATION bunseki
+)
