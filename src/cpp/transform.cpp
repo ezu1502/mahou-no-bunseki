@@ -4,10 +4,22 @@
 #include <numbers>
 #include <cmath>
 #include <cstdint>
+#include <array>
 
 #include <bunseki/transform.hpp>
 #include <bunseki/buntools.hpp>
 
+ChromaFeatures::ChromaFeatures(
+    std::vector<std::array<float, 12>> chroma_windows,
+    std::array<float, 12> global_chroma,
+    std::array<float, 12> mean_chroma,
+    std::array<float, 12> chroma_variance
+) :
+    chroma_windows(chroma_windows),
+    global_chroma(global_chroma),
+    mean_chroma (mean_chroma),
+    chroma_variance(chroma_variance)
+{}
 
 Transform::Transform(const std::vector<float>& samples) : samples(samples){}
 
@@ -134,7 +146,6 @@ std::vector<ComplexVec> Transform::stft(int window_size, int hop_size) const{
     return result;
 }
 
-
 std::vector<FrequencyBin> Transform::fft_frequencies() const{
     ComplexVec fft_result = fft();
 
@@ -169,7 +180,7 @@ std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec) cons
     for (std::size_t k = 0, len = vec.size(); k <= len / 2; k++){
         float magnitude = std::abs(vec[k]) / len;
 
-        if (k != 0 && k != len/2){
+        if (k != 0 && !(len % 2 == 0 && k == len / 2)){
             magnitude *= 2.0f;
         }
 
@@ -228,3 +239,138 @@ float Transform::spectral_centroid(const ComplexVec& vec) const{
 
     return numerator / denominator;
 }
+
+
+std::array<float, 12> Transform::chroma(const std::vector<FrequencyBin>& fft_freqs) const {
+    if (fft_freqs.empty()){
+        throw std::invalid_argument("fft_freqs is empty!");
+    }
+
+    std::array<float, 12> result{};
+
+    float sum = 0.0f;
+
+    for (const FrequencyBin& bin : fft_freqs){
+        if (bin.frequency <= 0){
+            continue;
+        }
+
+        float key_n = 69 + 12 * std::log2(bin.frequency / 440);
+
+        int key_midi = static_cast<int>(std::round(key_n));
+
+        int pitch_class = ((key_midi % 12) + 12) % 12;
+
+        float squared = bin.magnitude * bin.magnitude;
+
+        result[pitch_class] += squared;
+        sum += squared;
+    }
+
+    if (sum > 0){
+        for (float& f : result){
+            f /= sum;
+        }
+    }
+
+    return result;
+}
+
+
+std::vector<std::array<float, 12>> Transform::chroma_windows(const std::vector<std::vector<FrequencyBin>>& stft_freqs) const {
+    std::vector<std::array<float, 12>> result;
+    result.reserve(stft_freqs.size());
+
+    for (const auto& window_fft : stft_freqs){
+        std::array<float, 12> chroma_window = chroma(window_fft);
+
+        result.push_back(chroma_window);
+    }
+
+    return result;
+}
+
+std::vector<std::array<float, 12>> Transform::chroma_windows() const {
+    return chroma_windows(stft_frequencies(HIGH_RES_WINDOW_SIZE, HIGH_RES_HOP_SIZE));
+}
+
+std::array<float, 12> Transform::global_chroma() const{
+    if (samples.empty()){
+        throw std::runtime_error("Samples is empty!");
+    }
+
+    return chroma(fft_frequencies());
+}
+
+std::array<float, 12> Transform::mean_chroma() const {
+    return mean_chroma(chroma_windows());
+}
+
+std::array<float, 12> Transform::mean_chroma(const std::vector<std::array<float, 12>>& chroma_vector) const {
+    if (chroma_vector.empty()){
+        throw std::invalid_argument("Chroma vector is empty!");
+    }
+    std::size_t len = chroma_vector.size();
+    std::array<float, 12> result{};
+
+    for (const auto& c_window : chroma_vector){
+        for (std::size_t i = 0; i < 12; i++){
+            result[i] += c_window[i]; 
+        }
+    }
+
+    for (float& key : result){
+        key /= len;
+    }
+
+    return result;
+}
+
+std::array<float, 12> Transform::chroma_variance(const std::vector<std::array<float, 12>>& chroma_vector) const {
+    if (chroma_vector.empty()){
+        throw std::invalid_argument("Chroma vector is empty!");
+    }
+
+    std::size_t len = chroma_vector.size();
+
+    auto mean = mean_chroma(chroma_vector);
+
+    std::array<float, 12> result{};
+
+    for (const auto& c_window : chroma_vector){
+        for (std::size_t i = 0; i < 12; i++){
+            float deviation = (c_window[i] - mean[i]);
+            result[i] += deviation * deviation;
+        }
+    }
+
+    for (float& key : result){
+        key /= len;
+    }
+
+    return result;
+}
+
+std::array<float, 12> Transform::chroma_variance() const {
+    return chroma_variance(chroma_windows());
+}
+
+
+
+
+ChromaFeatures Transform::chroma_features() const {
+    std::vector<std::array<float, 12>> c_windows = chroma_windows();
+
+    std::array<float, 12> c_global = chroma(fft_frequencies());
+    std::array<float, 12> c_mean = mean_chroma(c_windows);
+    std::array<float, 12> c_variance = chroma_variance(c_windows);
+
+    return ChromaFeatures(
+        std::move(c_windows),
+        c_global,
+        c_mean,
+        c_variance
+    );
+}
+
+// TODO continuar aqui!

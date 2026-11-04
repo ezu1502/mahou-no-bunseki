@@ -15,8 +15,6 @@
 
 namespace py = pybind11;
 
-// TODO continuar aqui! eu parei nos bindings, tô organizando a pasta src/ pra conseguir ir testando e expandindo o bunseki
-
 PYBIND11_MODULE(_pybunseki, m){
     m.doc() = "Python bindings for Bunseki";
 
@@ -60,6 +58,13 @@ PYBIND11_MODULE(_pybunseki, m){
         .def_readonly("frequency", &FrequencyBin::frequency)
         .def_readonly("magnitude", &FrequencyBin::magnitude);
         
+    py::class_<ChromaFeatures>(m, "ChromaFeatures")
+        .def_readonly("chroma_windows", &ChromaFeatures::chroma_windows)
+        .def_readonly("global_chroma", &ChromaFeatures::global_chroma)
+        .def_readonly("mean_chroma", &ChromaFeatures::mean_chroma)
+        .def_readonly("chroma_variance", &ChromaFeatures::chroma_variance);
+
+
 
     py::class_<Analysis>(m, "Analysis")
         .def("rms", static_cast<float (Analysis::*)() const>(&Analysis::rms))
@@ -126,9 +131,55 @@ PYBIND11_MODULE(_pybunseki, m){
         .def(
             "spectral_centroid",
             static_cast<float (Transform::*)() const>(&Transform::spectral_centroid)
+        )
+
+        .def("global_chroma", &Transform::global_chroma)
+
+        .def(
+            "chroma_windows",
+            static_cast<std::vector<std::array<float, 12>>
+            (Transform::*)() const>(&Transform::chroma_windows)
+        )
+
+        .def(
+            "chroma_windows",
+            static_cast<std::vector<std::array<float, 12>>
+            (Transform::*)(const std::vector<std::vector<FrequencyBin>>&) const>(&Transform::chroma_windows),
+            py::arg("stft_freqs")
+        )
+
+        .def(
+            "mean_chroma",
+            static_cast<std::array<float, 12> (Transform::*)() const>(&Transform::mean_chroma)
+        )
+
+        .def(
+            "mean_chroma",
+            static_cast<std::array<float, 12> (Transform::*)(const std::vector<std::array<float, 12>>&) const>
+                (&Transform::mean_chroma),
+            py::arg("chroma_vector")
+        )
+
+        .def(
+            "chroma_variance",
+            static_cast<std::array<float, 12> (Transform::*)() const>(&Transform::chroma_variance)
+        )
+
+        .def(
+            "chroma_variance",
+            static_cast<std::array<float, 12> (Transform::*)(const std::vector<std::array<float, 12>>&) const>
+                (&Transform::chroma_variance),
+            py::arg("chroma_vector")
+        )
+
+        .def(
+            "chroma_features",
+            &Transform::chroma_features
         );
 
+    
 
+        
     py::class_<CBunseki>(m, "CBunseki")
         .def(py::init<std::vector<float>>(), py::arg("samples"))
 

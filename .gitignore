@@ -1,9 +1,13 @@
 /build/
 .vscode/
 .vs/
+__pycache__/
+
+*.pyd
+*.pyc
 
 *.exe
-*pdb
+*.pdb
 
 test_tracks/
 *.mp3
@@ -12,3 +16,6 @@ test_tracks/
 
 *.env
 .venv/
+.venv-dataset/
+
+datasets/fma_keys/

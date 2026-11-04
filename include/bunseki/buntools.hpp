@@ -17,6 +17,8 @@ inline constexpr double PI = std::numbers::pi;
 inline constexpr std::size_t STANDARD_WINDOW_SIZE = 1024;
 inline constexpr std::size_t STANDARD_HOP_SIZE = 441;
 
+inline constexpr std::size_t HIGH_RES_WINDOW_SIZE = 4096;
+inline constexpr std::size_t HIGH_RES_HOP_SIZE = 1024;
 
 
 

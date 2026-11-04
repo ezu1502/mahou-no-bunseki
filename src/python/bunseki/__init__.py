@@ -1,3 +1,3 @@
-from .bunseki import Bunseki
+from .bunseki import Bunseki, read_samples
 
-__all__ = ["Bunseki"]
+__all__ = ["Bunseki", "read_samples"]
