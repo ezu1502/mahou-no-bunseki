@@ -28,12 +28,14 @@ class Bunseki:
     def from_samples(cls, samples: list[float], to_mono: bool = False) -> Self:
         if not samples:
             raise ValueError(f"Cannot analyze an empty sample list")
-        
+            
         if to_mono:
             samples = _pybunseki.buntools.samples_to_mono(samples)
 
         instance = cls.__new__(cls)
         instance._cbunseki = _pybunseki.CBunseki(samples)
+
+        instance._perception = Perception(get_chroma_features = instance._cbunseki.transform.chroma_features)
         return instance
 
     @cached_property
@@ -51,3 +53,7 @@ class Bunseki:
     @property
     def transform(self) -> _pybunseki.Transform:
         return self._cbunseki.transform
+
+    @property
+    def perception(self) -> Perception:
+        return self._perception
