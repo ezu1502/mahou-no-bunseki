@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <array>
 
+#include <iostream>
+
 #include <bunseki/transform.hpp>
 #include <bunseki/buntools.hpp>
 
@@ -140,7 +142,13 @@ std::vector<ComplexVec> Transform::stft(int window_size, int hop_size) const{
 
         buntools::apply_hann_window(window);
 
-        result.push_back(fft_auxiliar(window));
+        auto start = buntools::perf_counter();
+        auto auxiliar = fft_auxiliar(window);
+
+        std::cout << buntools::perf_counter() - start << "\n";
+
+        result.push_back(auxiliar);
+        
     }
 
     return result;
@@ -197,6 +205,7 @@ std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec) cons
 std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(int window_size, int hop_size) const{
     std::vector<ComplexVec> windows = stft(window_size, hop_size);
 
+    std::cout << "stft in freqs finished";
     std::vector<std::vector<FrequencyBin>> result;
     result.reserve(windows.size());
 
@@ -291,7 +300,9 @@ std::vector<std::array<float, 12>> Transform::chroma_windows(const std::vector<s
 }
 
 std::vector<std::array<float, 12>> Transform::chroma_windows() const {
-    return chroma_windows(stft_frequencies(HIGH_RES_WINDOW_SIZE, HIGH_RES_HOP_SIZE));
+    auto stft = stft_frequencies(HIGH_RES_WINDOW_SIZE, HIGH_RES_HOP_SIZE);
+    std::cout << "Stft finished!";
+    return chroma_windows(stft);
 }
 
 std::array<float, 12> Transform::global_chroma() const{
@@ -359,10 +370,18 @@ std::array<float, 12> Transform::chroma_variance() const {
 
 
 ChromaFeatures Transform::chroma_features() const {
+    std::cout << "Calculating chroma_windows...";
     std::vector<std::array<float, 12>> c_windows = chroma_windows();
 
-    std::array<float, 12> c_global = chroma(fft_frequencies());
+    // std::array<float, 12> c_global = chroma(fft_frequencies());
+    std::array<float, 12> c_global{};
+    
+    std::cout << "Calculating mean_chroma...";
+
     std::array<float, 12> c_mean = mean_chroma(c_windows);
+
+    std::cout << "Calculating chroma_variance...";
+
     std::array<float, 12> c_variance = chroma_variance(c_windows);
 
     return ChromaFeatures(
@@ -372,5 +391,3 @@ ChromaFeatures Transform::chroma_features() const {
         c_variance
     );
 }
-
-// TODO continuar aqui!

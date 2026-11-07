@@ -18,4 +18,4 @@ test_tracks/
 .venv/
 .venv-dataset/
 
-datasets/fma_keys/
+datasets/

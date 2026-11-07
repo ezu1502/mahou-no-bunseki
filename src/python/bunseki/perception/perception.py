@@ -27,6 +27,7 @@ class Perception:
 
     @cached_property
     def numpy_chroma_features(self) -> np.ndarray:
+        print("Getting chroma features...")
         chroma_feats = self.chroma_features
 
         if any(
