@@ -34,14 +34,14 @@ std::expected<std::vector<float>, std::string> read_samples(const std::string& s
             &frames_read
         );
 
-        if (result != MA_SUCCESS){
+        if (result != MA_SUCCESS && result != MA_AT_END){
             ma_decoder_uninit(&decoder);
             return std::unexpected("Couldn't read samples\nError Code: " + std::to_string(result));
         }
 
         samples.insert(samples.end(), buffer.begin(), buffer.begin() + (frames_read * CHANNELS));
 
-        if (frames_read < FRAMES_PER_READ){
+        if (result == MA_AT_END || frames_read < FRAMES_PER_READ){
             break;
         }
     }

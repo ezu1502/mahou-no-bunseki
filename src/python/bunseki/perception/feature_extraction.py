@@ -1,5 +1,3 @@
-print("Starting...!")
-
 import sys
 import numpy as np
 from pathlib import Path
@@ -12,11 +10,6 @@ ROOT = Path(__file__).parents[4]
 sys.path.insert(0, str(ROOT / "src" / "python"))
 
 from bunseki import Bunseki
-
-print("Imports finished!")
-print("Loading dataset...")
-
-
 
 DATASET_PATH: Path = ROOT / "datasets" / "metadata.json"
 

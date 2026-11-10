@@ -4,7 +4,10 @@ from functools import cached_property
 
 from .._pybunseki import ChromaFeatures
 
-lazy import numpy as np
+import numpy as np
+
+from softmax_regression import SoftmaxRegression
+
 
 CHROMA_FEATURE_COUNT = 12
 
@@ -14,7 +17,8 @@ class Perception:
             raise TypeError("get_chroma_features must be callable")
 
         self._get_chroma_features: Callable[[], ChromaFeatures] = get_chroma_features
-
+        
+        # self.regression = SoftmaxRegression()
 
     @cached_property
     def chroma_features(self) -> ChromaFeatures:
