@@ -47,8 +47,8 @@ public:
     std::vector<FrequencyBin> fft_frequencies() const;
 
 
-    std::vector<ComplexVec> stft(int window_size, int hop_size) const;
-    std::vector<std::vector<FrequencyBin>> stft_frequencies(int window_size, int hop_size) const;
+    std::vector<ComplexVec> stft(std::size_t window_size, std::size_t hop_size) const;
+    std::vector<std::vector<FrequencyBin>> stft_frequencies(std::size_t window_size, std::size_t hop_size) const;
 
     float spectral_centroid() const;
 
@@ -71,7 +71,10 @@ private:
         return this->samples.size();
     }
 
-    ComplexVec fft_auxiliar(const std::vector<float>& vec) const;
+    ComplexVec prepare_for_fft(const std::vector<float>& vec) const;
+
+    ComplexVec fft_recursive(const std::vector<float>& vec) const;
+    void fft_in_place(ComplexVec& vec) const;
 
     std::vector<FrequencyBin> fft_frequencies(const ComplexVec& vec) const;
     float spectral_centroid(const ComplexVec& fft_result) const;

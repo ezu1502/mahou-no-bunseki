@@ -21,6 +21,9 @@ PYBIND11_MODULE(_pybunseki, m){
     auto buntools_m = m.def_submodule("buntools");
 
     buntools_m.def("is_power_of_two", &buntools::is_power_of_two, py::arg("number"));
+    buntools_m.def("next_power_of_two", &buntools::next_power_of_two, py::arg("number"));
+    buntools_m.def("reverse_bits", &buntools::reverse_bits, py::arg("number"), py::arg("bit_count"));
+
     buntools_m.def("samples_to_mono", &buntools::samples_to_mono, py::arg("samples"));
     buntools_m.def(
         "generate_sine_wave", &buntools::generate_sine_wave,
@@ -30,6 +33,8 @@ PYBIND11_MODULE(_pybunseki, m){
     ); 
 
     buntools_m.def("read_dataset", &buntools::read_dataset, py::arg("csv_path"));
+
+
 
     auto constants_m = buntools_m.def_submodule("constants");
 

@@ -39,14 +39,20 @@ namespace buntools {
     };
 
     bool is_power_of_two(std::size_t number);
+    std::size_t next_power_of_two(std::size_t number);
+
 
     void apply_hann_window(std::vector<float>& vec);
 
-    std::vector<float> samples_to_mono(std::vector<float> samples);
+    std::vector<float> samples_to_mono(const std::vector<float>& samples);
 
     std::vector<float> generate_sine_wave(float frequency, float time, int sample_rate = SAMPLE_RATE);
 
     std::unordered_map<std::string, int> read_dataset(const std::string& csv_path);
+
+    bool apply_zero_padding(std::vector<float>& vec);
+
+    std::size_t reverse_bits(std::size_t number, std::size_t bit_count);
 
 }
 

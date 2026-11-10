@@ -7,10 +7,24 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <limits>
 
 namespace buntools {
     bool is_power_of_two(std::size_t number){
         return number > 0 && (number & (number - 1)) == 0;
+    }
+
+    std::size_t next_power_of_two(std::size_t number){
+        if (number <= 0){
+            return 1;
+        }
+        
+        std::size_t two_power = 1;
+
+        while (number > two_power){
+            two_power *= 2;
+        }
+        return two_power;
     }
 
     void apply_hann_window(std::vector<float>& vec){
@@ -26,7 +40,7 @@ namespace buntools {
         }
     } 
 
-    std::vector<float> samples_to_mono(std::vector<float> samples){
+    std::vector<float> samples_to_mono(const std::vector<float>& samples){
         std::vector<float> result;
         result.reserve(samples.size() / 2);
 
@@ -100,5 +114,49 @@ namespace buntools {
         }
         return result;
     }
+
+    bool apply_zero_padding(std::vector<float>& vec){
+        if (vec.empty()){
+            return false;
+        }
+        std::size_t size = vec.size();
+
+        if (is_power_of_two(size)){
+            return true;
+        }
+
+        std::size_t two_power = 1;
+
+        while (size > two_power){
+            two_power *= 2;
+        }
+
+        vec.resize(two_power, 0.0f);
+
+        return true;
+    }
     
+    std::size_t reverse_bits(std::size_t number, std::size_t bit_count){
+        if (bit_count == 0){
+            return 0;
+        }
+
+        if (bit_count < std::numeric_limits<std::size_t>::digits && number >= std::size_t{1} << bit_count){
+            throw std::invalid_argument("number doesn't fit in bit_count");
+        }
+
+        std::size_t result = 0;
+
+        for (std::size_t i = 0; i < bit_count; i++){
+            std::size_t right = number & 1;
+
+            result <<= 1;
+            result += right;
+
+            number >>= 1;
+        }
+
+        return result;
+    }
+
 }

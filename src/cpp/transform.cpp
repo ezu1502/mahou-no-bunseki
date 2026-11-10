@@ -1,11 +1,11 @@
 #include <vector>
 #include <complex>
 #include <stdexcept>
-#include <numbers>
 #include <cmath>
-#include <cstdint>
 #include <array>
-
+#include <utility>
+#include <bit>
+#include <numbers>
 #include <iostream>
 
 #include <bunseki/transform.hpp>
@@ -17,7 +17,7 @@ ChromaFeatures::ChromaFeatures(
     std::array<float, 12> mean_chroma,
     std::array<float, 12> chroma_variance
 ) :
-    chroma_windows(chroma_windows),
+    chroma_windows(std::move(chroma_windows)),
     global_chroma(global_chroma),
     mean_chroma (mean_chroma),
     chroma_variance(chroma_variance)
@@ -49,36 +49,45 @@ ComplexVec Transform::dft() const{
     return result;
 }
 
-ComplexVec Transform::fft() const{
-    // PADDING 
-
-    if (samples.empty()){
-        throw std::runtime_error("Samples is empty!");
-    }
-    
-    std::size_t size = samples.size();
-
-    std::vector<float> padded = samples;
-
-    std::size_t two_power = 1;
-
-    while (size > two_power){
-        two_power <<= 1;
+ComplexVec Transform::prepare_for_fft(const std::vector<float>& sample_vec) const {
+    if (sample_vec.empty()){
+        throw std::runtime_error("sample_vec is empty!");
     }
 
-    std::vector<float> padding(two_power - size);
-    padded.insert(padded.end(), padding.begin(), padding.end());
+    std::size_t padded_length = buntools::next_power_of_two(sample_vec.size());
 
-    size = padded.size();
+    ComplexVec result(padded_length);
 
-    // FFT em si
+    for (std::size_t i = 0, size = sample_vec.size(); i < size; i++){
+        result[i].real(sample_vec[i]);
+    }
 
-    return fft_auxiliar(padded);
+    return result;
 }
 
-ComplexVec Transform::fft_auxiliar(const std::vector<float>& vec) const{
+ComplexVec Transform::fft() const {
+    // PADDING 
+
+    ComplexVec vec = prepare_for_fft(samples);
+    
+    // FFT em si
+    fft_in_place(vec);
+    return vec;
+}
+
+ComplexVec Transform::fft_recursive(const std::vector<float>& vec) const{ 
+    if (vec.empty()){
+        throw std::invalid_argument("Vector is empty!");
+    }
+    
     if (vec.size() == 1){
         return {Complex(vec[0], 0.0f)};
+    }
+
+    
+    
+    if (!buntools::is_power_of_two(vec.size())){
+        throw std::invalid_argument("Vector's size must be a power of two for fft_in_place() to work!");
     }
 
     std::vector<float> odd;
@@ -96,8 +105,8 @@ ComplexVec Transform::fft_auxiliar(const std::vector<float>& vec) const{
         }
     }
 
-    ComplexVec odd_result = fft_auxiliar(odd);
-    ComplexVec even_result = fft_auxiliar(even);
+    ComplexVec odd_result = fft_recursive(odd);
+    ComplexVec even_result = fft_recursive(even);
     
     ComplexVec result(vec.size());
 
@@ -119,7 +128,55 @@ ComplexVec Transform::fft_auxiliar(const std::vector<float>& vec) const{
     return result;
 }
 
-std::vector<ComplexVec> Transform::stft(int window_size, int hop_size) const{
+void Transform::fft_in_place(ComplexVec& vec) const {
+    // VERIFICAÇÕES
+    if (vec.empty()){
+        throw std::invalid_argument("Vector is empty!");
+    }
+
+    if (vec.size() == 1) {
+        return;
+    }
+    
+    if (!buntools::is_power_of_two(vec.size())){
+        throw std::invalid_argument("Vector's size must be a power of two for fft_in_place() to work!");
+    }
+
+    // trocando ordem dos elementos pra ficar pares separados de ímpares
+    std::size_t bit_count = std::countr_zero(vec.size());
+
+    for (std::size_t i = 0, l = vec.size(); i < l; i++){
+        std::size_t new_index = buntools::reverse_bits(i, bit_count);
+
+        if (new_index > i){
+            std::swap(vec[i], vec[new_index]);
+        }
+    }
+
+    for (std::size_t len = 2, size = vec.size(); ; len *= 2){
+        Complex angle_increment(std::cos(2 * PI / len), -std::sin(2 * PI / len));
+        
+        for (std::size_t i = 0; i < size; i += len){
+            Complex w(1.0f, 0.0f);
+
+            for (std::size_t j = 0; j < len / 2; j++){
+                Complex u = vec[i + j], v = vec[i + j + len / 2];
+
+                vec[i + j] = u + w * v;
+                vec[i + j + len / 2] = u - w * v;
+
+                w *= angle_increment;
+            }
+        }
+
+        if (len == size){
+            break;
+        }   
+    }
+}
+
+
+std::vector<ComplexVec> Transform::stft(std::size_t window_size, std::size_t hop_size) const{
     if (samples.empty()){
         throw std::runtime_error("Samples is empty!");
     }
@@ -142,13 +199,11 @@ std::vector<ComplexVec> Transform::stft(int window_size, int hop_size) const{
 
         buntools::apply_hann_window(window);
 
-        auto start = buntools::perf_counter();
-        auto auxiliar = fft_auxiliar(window);
-
-        std::cout << buntools::perf_counter() - start << "\n";
-
-        result.push_back(auxiliar);
+        ComplexVec vec = prepare_for_fft(window);
         
+        fft_in_place(vec);
+        
+        result.push_back(std::move(vec));
     }
 
     return result;
@@ -158,6 +213,7 @@ std::vector<FrequencyBin> Transform::fft_frequencies() const{
     ComplexVec fft_result = fft();
 
     std::vector<FrequencyBin> result;
+    result.reserve(fft_result.size() / 2 + 1);
 
     for (std::size_t k = 0, len = fft_result.size(); k <= len / 2; k++){
         float magnitude = std::abs(fft_result[k]) / len;
@@ -185,6 +241,8 @@ std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec) cons
     }
     std::vector<FrequencyBin> result;
 
+    result.reserve(vec.size() / 2 + 1);
+
     for (std::size_t k = 0, len = vec.size(); k <= len / 2; k++){
         float magnitude = std::abs(vec[k]) / len;
 
@@ -202,10 +260,10 @@ std::vector<FrequencyBin> Transform::fft_frequencies(const ComplexVec& vec) cons
 }
 
 
-std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(int window_size, int hop_size) const{
+std::vector<std::vector<FrequencyBin>> Transform::stft_frequencies(std::size_t window_size, std::size_t hop_size) const{
     std::vector<ComplexVec> windows = stft(window_size, hop_size);
 
-    std::cout << "stft in freqs finished";
+    // std::cout << "stft in freqs finished";
     std::vector<std::vector<FrequencyBin>> result;
     result.reserve(windows.size());
 
@@ -301,7 +359,7 @@ std::vector<std::array<float, 12>> Transform::chroma_windows(const std::vector<s
 
 std::vector<std::array<float, 12>> Transform::chroma_windows() const {
     auto stft = stft_frequencies(HIGH_RES_WINDOW_SIZE, HIGH_RES_HOP_SIZE);
-    std::cout << "Stft finished!";
+    // std::cout << "Stft finished!";
     return chroma_windows(stft);
 }
 
@@ -367,20 +425,17 @@ std::array<float, 12> Transform::chroma_variance() const {
 }
 
 
-
-
 ChromaFeatures Transform::chroma_features() const {
-    std::cout << "Calculating chroma_windows...";
+    // std::cout << "Calculating chroma_windows...";
     std::vector<std::array<float, 12>> c_windows = chroma_windows();
 
-    // std::array<float, 12> c_global = chroma(fft_frequencies());
-    std::array<float, 12> c_global{};
-    
-    std::cout << "Calculating mean_chroma...";
+    std::array<float, 12> c_global = chroma(fft_frequencies());
+        
+    // std::cout << "Calculating mean_chroma...";
 
     std::array<float, 12> c_mean = mean_chroma(c_windows);
 
-    std::cout << "Calculating chroma_variance...";
+    // std::cout << "Calculating chroma_variance...";
 
     std::array<float, 12> c_variance = chroma_variance(c_windows);
 
