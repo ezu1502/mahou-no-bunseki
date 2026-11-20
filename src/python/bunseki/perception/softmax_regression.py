@@ -23,14 +23,26 @@ class SoftmaxRegression:
         self.W: np.ndarray = np.random.randn(36, 24) * 0.01
         
         self.b: np.ndarray = np.zeros(24)
-        self.LEARNING_RATE = 5 / 100
+        self.LEARNING_RATE = 1 / 10
 
         self.SONG_COUNT = self.X.shape[0] # 5488 idealmente
 
         self.start_loss: float = self.cross_entropy(self.predict())
 
         self.epochs_elapsed: int = 0
+
+    def set_learning_rate(self, lr: float) -> None:
+        if lr < 0 or lr > 2:
+            raise ValueError("Learning rate must be between 0 and 2")
+
+        self.LEARNING_RATE = lr
+
+    def set_start_epoch(self, start_epoch: int) -> None:
+        if start_epoch < 0: 
+            raise ValueError("Cannot have negative epochs")
         
+        self.epochs_elapsed = start_epoch
+
     @property
     def parameters(self):
         return (self.W, self.b)
@@ -92,11 +104,14 @@ class SoftmaxRegression:
         if amount <= 0:
             return
 
-        for i in range(amount):
+        for _ in range(amount):
             P: np.ndarray = self.predict()
 
             if(log_loss):
-                print(f"Epoch {self.epochs_elapsed : 03d} Loss: {self.cross_entropy(P)}")
+                print(
+                    f"Epoch {self.epochs_elapsed : 03d} "
+                    f"Loss: {self.cross_entropy(P)}"
+                )
 
         
             derivatives = self.deriv(P)
@@ -115,4 +130,19 @@ class SoftmaxRegression:
 
         print(f"Weights saved to {destination}!")
 
-    
+    def load_weights(self, source: Path) -> None:
+        if not source.is_file():
+            raise FileNotFoundError("Weights file not found.")
+        
+        with np.load(source) as data:
+            if "W" not in data or "b" not in data:
+                raise ValueError("Weights file must contain W and b")
+
+            weights = data.get("W")
+            biases = data.get("b")
+
+        if weights.shape != (36, 24) or biases.shape != (24,):
+            raise ValueError("Invalid weights or biases shape!")
+
+        self.W = weights
+        self.b = biases

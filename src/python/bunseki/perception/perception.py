@@ -8,7 +8,6 @@ import numpy as np
 
 from softmax_regression import SoftmaxRegression
 
-
 CHROMA_FEATURE_COUNT = 12
 
 class Perception:

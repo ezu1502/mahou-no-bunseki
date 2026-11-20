@@ -1,14 +1,33 @@
 from softmax_regression import SoftmaxRegression
 from feature_loading import get_dataset_matrices
+import numpy as np
+from pathlib import Path
+
+ROOT = Path(__file__).parents[4]
+MODELS_DATASET = ROOT / "datasets" / "models"
+MODEL_WEIGHTS = MODELS_DATASET / "softmax_regression_v2.npz"
 
 ids, X, Y = get_dataset_matrices()
 
-regression = SoftmaxRegression(X, Y) # essa vai conhecer os pesos de vdd 
+regression = SoftmaxRegression(X, Y)
+regression.load_weights(MODEL_WEIGHTS)
+regression.set_start_epoch(599_800)
+regression.set_learning_rate(1.2)
 
-print("Loss at start:", regression.start_loss)
-
-for i in range(10001):
+for i in range(300001):
 
     to_print = i % 200 == 0
-    regression.epochs(1, log_loss = to_print)
+    regression.epochs(1, log_loss=to_print)
 
+    if to_print:
+        predictions = np.argmax(regression.predict(), axis=1)
+        answers = np.argmax(regression.Y, axis=1)
+
+        accuracy = np.mean(predictions == answers)
+
+        print(f"Accuracy: {accuracy:.2%}")
+
+
+regression.save_weights(
+    MODELS_DATASET / "softmax_regression_v2.npz"
+)

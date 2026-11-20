@@ -6,6 +6,7 @@ from typing import Self
 from functools import cached_property
 
 from .perception.perception import Perception
+from .metadata import Metadata
 
 EXTENSIONS = [".mp3", ".wav", ".flac"] # extensões que o meu sample reader feito com miniaudio suporta
 
@@ -18,11 +19,13 @@ class Bunseki:
         if not song_path.suffix.lower() in EXTENSIONS:
             raise ValueError(f"Unsupported extension: {song_path.suffix}. Expected any of: {EXTENSIONS}")
 
+        self.song_path = song_path
+
         samples = _pybunseki.read_samples(str(song_path), to_mono = True)
 
         self._cbunseki = _pybunseki.CBunseki(samples)
-
         self._perception = Perception(get_chroma_features = self._cbunseki.transform.chroma_features)
+        self._metadata = Metadata(song_path = self.song_path)
 
     @classmethod
     def from_samples(cls, samples: list[float], to_mono: bool = False) -> Self:
@@ -57,3 +60,7 @@ class Bunseki:
     @property
     def perception(self) -> Perception:
         return self._perception
+
+    @property
+    def metadata(self) -> Metadata:
+        return self._metadata
