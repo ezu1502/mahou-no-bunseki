@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Callable
+from typing import Callable, Self
 from functools import cached_property
 
 from .._pybunseki import ChromaFeatures
 
 import numpy as np
 
-from softmax_regression import SoftmaxRegression
+from .inference import PerceptionInference, Methods
+from .keys import Keys
 
 CHROMA_FEATURE_COUNT = 12
 
@@ -17,8 +18,18 @@ class Perception:
 
         self._get_chroma_features: Callable[[], ChromaFeatures] = get_chroma_features
         
-        # self.regression = SoftmaxRegression()
+        self._inference: PerceptionInference | None = None
+        self.method: Methods = Methods.PERCEPTRON
 
+    def set_method(self, method: Methods) -> Self:
+        if not isinstance(method, Methods):
+            raise TypeError(f"Invalid method: {method}")
+        
+        self.method = method
+        self.__dict__.pop("key", None) # Remove do cache da cached_property
+
+        return self
+    
     @cached_property
     def chroma_features(self) -> ChromaFeatures:
         feats: ChromaFeatures = self._get_chroma_features()
@@ -46,6 +57,13 @@ class Perception:
         result[CHROMA_FEATURE_COUNT * 2:CHROMA_FEATURE_COUNT * 3] = chroma_feats.chroma_variance
 
         return result
-        
+
+    @cached_property
+    def key(self) -> Keys:
+        if self._inference is None:
+            self._inference = PerceptionInference(self.numpy_chroma_features)
+
+        return self._inference.predict_key(method = self.method)
+    
 # global chroma, mean chroma, chroma variance, chroma windows
 #    array[12],   array[12],     array[12],   vetor<array[12]>

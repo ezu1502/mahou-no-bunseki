@@ -2,7 +2,6 @@ from . import _pybunseki
 from ._pybunseki import read_samples # import pra facilitar o __init__.py sem acessar diretamente a interface privada
 
 from pathlib import Path
-from typing import Self
 from functools import cached_property
 
 from .perception.perception import Perception
@@ -27,19 +26,9 @@ class Bunseki:
         self._perception = Perception(get_chroma_features = self._cbunseki.transform.chroma_features)
         self._metadata = Metadata(song_path = self.song_path)
 
-    @classmethod
-    def from_samples(cls, samples: list[float], to_mono: bool = False) -> Self:
-        if not samples:
-            raise ValueError(f"Cannot analyze an empty sample list")
-            
-        if to_mono:
-            samples = _pybunseki.buntools.samples_to_mono(samples)
-
-        instance = cls.__new__(cls)
-        instance._cbunseki = _pybunseki.CBunseki(samples)
-
-        instance._perception = Perception(get_chroma_features = instance._cbunseki.transform.chroma_features)
-        return instance
+    # @classmethod
+    # def from_samples(cls, samples: list[float], to_mono: bool = False) -> Self:
+    #     ...
 
     @cached_property
     def samples(self) -> list[float]:

@@ -34,14 +34,13 @@ def softmax_training(): # Epoch atual: 600_000
         MODELS_DATASET / "softmax_regression_v2.npz"
     )
 
-
 def perceptron_training(): # Epoch atual: 30_000
     mlp = Perceptron(X, Y)
-    mlp.load_parameters(MODELS_DATASET / "perceptron_v1.npz")
-    mlp.set_learning_rate(0.1)
-    mlp.set_epoch_index(15000)
+    mlp.load_parameters(MODELS_DATASET / "perceptron_v2.npz")
+    mlp.set_learning_rate(0.05)
+    mlp.set_epoch_index(30_000)
 
     mlp.training(epoch_number = 15000)
-    mlp.save_parameters(MODELS_DATASET / "perceptron_v2.npz")
+    mlp.save_parameters(MODELS_DATASET / "perceptron_v3.npz")
 
 perceptron_training()

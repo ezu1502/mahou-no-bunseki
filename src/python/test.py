@@ -1,6 +1,9 @@
 from pathlib import Path
+from bunseki import Bunseki
 
-from bunseki import Bunseki, read_samples
+print("Running!")
+SONGS = Path(r"C:\Users\dudul\Mahou no Ongaku")
 
-fmak_folder = Path(__file__).parent.parent.parent / "datasets" / "fma_keys"
+zero = Bunseki(SONGS / "Show.mp3")
 
+print(zero.perception.key)
