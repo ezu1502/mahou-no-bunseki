@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 project(bunseki LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -11,13 +11,26 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
+find_package(taglib CONFIG REQUIRED
+    PATHS "C:/dev/vcpkg/installed/x64-windows/share/taglib"
+    NO_DEFAULT_PATH
+)
+
 add_library(bunseki STATIC
     src/cpp/sample_reader.cpp
     src/cpp/analysis.cpp
     src/cpp/transform.cpp
     src/cpp/cbunseki.cpp
     src/cpp/buntools.cpp
+    src/cpp/metadata.cpp
     external/miniaudio.cpp
+)
+
+target_link_libraries(bunseki PUBLIC
+    TagLib::tag
+)
+target_include_directories(bunseki PUBLIC
+    "C:/dev/vcpkg/installed/x64-windows/include"
 )
 
 target_include_directories(bunseki
@@ -53,6 +66,19 @@ set_target_properties(_pybunseki PROPERTIES
 )
 
 target_link_libraries(_pybunseki PRIVATE bunseki)
+
+add_custom_command(TARGET _pybunseki POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_RUNTIME_DLLS:_pybunseki>"
+        "$<TARGET_FILE_DIR:_pybunseki>"
+    COMMAND_EXPAND_LISTS
+)
+
+add_custom_command(TARGET _pybunseki POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/dev/vcpkg/installed/x64-windows/bin/libz.dll"
+        "$<TARGET_FILE_DIR:_pybunseki>"
+)
 
 install(TARGETS _pybunseki
     LIBRARY DESTINATION bunseki

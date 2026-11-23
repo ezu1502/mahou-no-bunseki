@@ -8,6 +8,7 @@ __pycache__/
 
 *.exe
 *.pdb
+*.dll
 
 test_tracks/
 *.mp3

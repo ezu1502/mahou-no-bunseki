@@ -1,9 +1,15 @@
 from pathlib import Path
+
+import os
+
+
 from bunseki import Bunseki
+from bunseki.perception.inference import Methods
 
 print("Running!")
 SONGS = Path(r"C:\Users\dudul\Mahou no Ongaku")
 
-zero = Bunseki(SONGS / "Show.mp3")
+for song in SONGS.iterdir():
+    z = Bunseki(song)
 
-print(zero.perception.key)
+    print(z.metadata.get_tags())

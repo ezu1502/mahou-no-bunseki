@@ -1,6 +1,6 @@
-from softmax_regression import SoftmaxRegression
-from mlp import Perceptron
-from feature_loading import get_dataset_matrices
+from .softmax_regression import SoftmaxRegression
+from .mlp import Perceptron
+from .feature_loading import get_dataset_matrices
 import numpy as np
 from pathlib import Path
 
@@ -43,4 +43,6 @@ def perceptron_training(): # Epoch atual: 30_000
     mlp.training(epoch_number = 15000)
     mlp.save_parameters(MODELS_DATASET / "perceptron_v3.npz")
 
-perceptron_training()
+
+if __name__ == "__main__":
+    perceptron_training()

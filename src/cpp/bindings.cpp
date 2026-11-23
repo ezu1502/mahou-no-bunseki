@@ -1,23 +1,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <bunseki/cbunseki.hpp>
-#include <bunseki/sample_reader.hpp>
-#include <bunseki/analysis.hpp>
-#include <bunseki/transform.hpp>
-#include <bunseki/buntools.hpp>
-
-#include <cstddef>
-#include <complex>
+#include <bunseki/bunseki_all.hpp>
 #include <vector>
 #include <string>
 #include <stdexcept>
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_pybunseki, m){
-    m.doc() = "Python bindings for Bunseki";
-
+void bind_buntools(py::module_& m){
     auto buntools_m = m.def_submodule("buntools");
 
     buntools_m.def("is_power_of_two", &buntools::is_power_of_two, py::arg("number"));
@@ -34,8 +25,6 @@ PYBIND11_MODULE(_pybunseki, m){
 
     buntools_m.def("read_dataset", &buntools::read_dataset, py::arg("csv_path"));
 
-
-
     auto constants_m = buntools_m.def_submodule("constants");
 
     constants_m.attr("SAMPLE_RATE") = SAMPLE_RATE;
@@ -43,7 +32,9 @@ PYBIND11_MODULE(_pybunseki, m){
     constants_m.attr("STANDARD_WINDOW_SIZE") = STANDARD_WINDOW_SIZE;
     constants_m.attr("STANDARD_HOP_SIZE") = STANDARD_HOP_SIZE;
 
+}
 
+void bind_functions(py::module_& m){
     m.def(
         "read_samples",
         [](const std::string& song_path, bool to_mono) -> py::object {
@@ -58,7 +49,9 @@ PYBIND11_MODULE(_pybunseki, m){
         py::arg("song_path"),
         py::arg("to_mono") = true
     );
+}
 
+void bind_structures(py::module_& m){
     py::class_<FrequencyBin>(m, "FrequencyBin")
         .def_readonly("frequency", &FrequencyBin::frequency)
         .def_readonly("magnitude", &FrequencyBin::magnitude);
@@ -68,9 +61,9 @@ PYBIND11_MODULE(_pybunseki, m){
         .def_readonly("global_chroma", &ChromaFeatures::global_chroma)
         .def_readonly("mean_chroma", &ChromaFeatures::mean_chroma)
         .def_readonly("chroma_variance", &ChromaFeatures::chroma_variance);
+}
 
-
-
+void bind_analysis(py::module_& m){
     py::class_<Analysis>(m, "Analysis")
         .def("rms", static_cast<float (Analysis::*)() const>(&Analysis::rms))
         .def("p2p_amplitude", &Analysis::p2p_amplitude)
@@ -109,7 +102,9 @@ PYBIND11_MODULE(_pybunseki, m){
         .def("peak_detection", &Analysis::peak_detection, py::arg("rms_values"))
         .def("lag_bpm", &Analysis::lag_bpm);
 
-            
+}
+
+void bind_transform(py::module_& m){
     py::class_<Transform>(m, "Transform")
         .def("dft", &Transform::dft)
         .def("fft", &Transform::fft)
@@ -183,8 +178,9 @@ PYBIND11_MODULE(_pybunseki, m){
         );
 
     
+}
 
-        
+void bind_cbunseki(py::module_& m){
     py::class_<CBunseki>(m, "CBunseki")
         .def(py::init<std::vector<float>>(), py::arg("samples"))
 
@@ -196,6 +192,80 @@ PYBIND11_MODULE(_pybunseki, m){
         .def_readonly("transform", &CBunseki::transform, py::return_value_policy::reference_internal);
         // esse py::return_value_policy::reference_internal mantém o objeto pai vivo enquanto os filhos estiverem sendo usados.
         // isso garante que não haja problemas de memória decorrentes de todos usarem referências para o mesmo objeto samples
+}
+
+void bind_metadata(py::module_& m){
+    py::class_<Metadata> metadata(m, "Metadata");
+
+    py::enum_<Metadata::Status>(metadata, "Status")
+        .value("NOT_LOADED", Metadata::Status::not_loaded)
+        .value("SUCCESS", Metadata::Status::success)
+        .value("FILE_NOT_FOUND", Metadata::Status::file_not_found)
+        .value("NO_TAGS_FOUND", Metadata::Status::no_tags_found);
+
+    metadata
+        .def(py::init<std::string>(), py::arg("song_path"))
+        .def("load_metadata", &Metadata::load_metadata, py::return_value_policy::reference_internal)
+        .def("get_status", &Metadata::get_status)
+        .def("check_status", &Metadata::check_status, py::arg("stat"))
+        .def("discovered_tags", &Metadata::discovered_tags)
+        .def(
+            "get_tags",
+            &Metadata::get_tags,
+            py::return_value_policy::reference_internal
+        )
+        .def("__bool__", &Metadata::operator bool)
+        .def(
+            "__iter__",
+            [](const Metadata& self){
+                return py::make_iterator(self.begin(), self.end());
+            },
+            py::keep_alive<0, 1>() // mantém o Metadata vivo enquanto o iterador estiver sendo usado
+        )
+        .def("__getitem__", &Metadata::operator[])
+        .def("__contains__", &Metadata::contains)
+        .def(
+            "__getattr__",
+            [](const Metadata& self, const std::string& item){
+                try {
+                    return self[item];
+                }
+                catch (const std::out_of_range&){
+                    throw py::attribute_error(
+                        "Metadata has no attribute '" + item + "'."
+                    );
+                }
+            }
+        )
+        .def(
+            "get",
+            [](const Metadata& self, const std::string& item, py::object default_value) -> py::object {
+                try {
+                    return py::cast(self[item]);
+                }
+                catch (const std::out_of_range&){
+                    return default_value;
+                }
+            },
+            py::arg("item"),
+            py::arg("default_value") = py::none()
+        );
+        
+}
+
+PYBIND11_MODULE(_pybunseki, m){
+    m.doc() = "Python bindings for Bunseki";
+
+    bind_buntools(m);
+    bind_functions(m);
+    bind_structures(m);
+
+    bind_analysis(m);
+    bind_transform(m);
+    bind_cbunseki(m);
+
+    bind_metadata(m);
+
 }
 
 

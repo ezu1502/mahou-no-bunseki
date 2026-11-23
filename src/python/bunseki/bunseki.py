@@ -5,7 +5,6 @@ from pathlib import Path
 from functools import cached_property
 
 from .perception.perception import Perception
-from .metadata import Metadata
 
 EXTENSIONS = [".mp3", ".wav", ".flac"] # extensões que o meu sample reader feito com miniaudio suporta
 
@@ -24,11 +23,8 @@ class Bunseki:
 
         self._cbunseki = _pybunseki.CBunseki(samples)
         self._perception = Perception(get_chroma_features = self._cbunseki.transform.chroma_features)
-        self._metadata = Metadata(song_path = self.song_path)
+        self._metadata = _pybunseki.Metadata(song_path = str(self.song_path)).load_metadata()
 
-    # @classmethod
-    # def from_samples(cls, samples: list[float], to_mono: bool = False) -> Self:
-    #     ...
 
     @cached_property
     def samples(self) -> list[float]:
@@ -51,5 +47,8 @@ class Bunseki:
         return self._perception
 
     @property
-    def metadata(self) -> Metadata:
+    def metadata(self) -> _pybunseki.Metadata:
         return self._metadata
+
+    def __repr__(self) -> str:
+        return f"Bunseki(song_path={str(self.song_path)!r})"
