@@ -5,12 +5,20 @@
 #include <vector>
 #include <unordered_map>
 #include <variant>
+#include <cstdint>
+#include <optional>
 
-#include <taglib/fileref.h>
-#include <taglib/tag.h>
-#include <taglib/audioproperties.h>
+struct CoverArt {
+    CoverArt(std::vector<std::uint8_t> data, std::string file_type, std::string description = "None") :
+        data(std::move(data)),
+        file_type(std::move(file_type)),
+        description(std::move(description)) 
+    {}
 
-
+    std::vector<std::uint8_t> data;
+    std::string file_type;
+    std::string description;
+};
 
 class Metadata {
 public:
@@ -43,7 +51,7 @@ public:
 
     bool contains(const std::string& item) const;
 
-    
+    std::optional<CoverArt> get_cover() const;
     
 private:
     std::string song_path;

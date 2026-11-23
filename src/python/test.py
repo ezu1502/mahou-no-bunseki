@@ -12,4 +12,6 @@ SONGS = Path(r"C:\Users\dudul\Mahou no Ongaku")
 for song in SONGS.iterdir():
     z = Bunseki(song)
 
-    print(z.metadata.get_tags())
+    if (image := z.metadata.get_cover()) is not None:
+
+        print(image.data)

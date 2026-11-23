@@ -195,6 +195,11 @@ void bind_cbunseki(py::module_& m){
 }
 
 void bind_metadata(py::module_& m){
+    py::class_<CoverArt>(m, "CoverArt")
+        .def_readonly("data", &CoverArt::data)
+        .def_readonly("file_type", &CoverArt::file_type)
+        .def_readonly("description", &CoverArt::description);
+        
     py::class_<Metadata> metadata(m, "Metadata");
 
     py::enum_<Metadata::Status>(metadata, "Status")
@@ -203,6 +208,7 @@ void bind_metadata(py::module_& m){
         .value("FILE_NOT_FOUND", Metadata::Status::file_not_found)
         .value("NO_TAGS_FOUND", Metadata::Status::no_tags_found);
 
+        
     metadata
         .def(py::init<std::string>(), py::arg("song_path"))
         .def("load_metadata", &Metadata::load_metadata, py::return_value_policy::reference_internal)
@@ -249,8 +255,10 @@ void bind_metadata(py::module_& m){
             },
             py::arg("item"),
             py::arg("default_value") = py::none()
-        );
-        
+        )
+        .def("get_cover", &Metadata::get_cover);
+
+    
 }
 
 PYBIND11_MODULE(_pybunseki, m){

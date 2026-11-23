@@ -11,7 +11,6 @@
 
 #include <bunseki/metadata.hpp>
 
-
 Metadata::Metadata(std::string song_path) : song_path(std::move(song_path)) {}
 
 Metadata& Metadata::load_metadata(){
@@ -114,3 +113,48 @@ std::variant<std::string, int> Metadata::operator[](const std::string& key) cons
 bool Metadata::contains(const std::string& item) const{
     return tags.contains(item);
 }
+
+std::optional<CoverArt> Metadata::get_cover() const {
+    using namespace TagLib;
+
+    FileRef file(song_path.c_str());
+
+    if (file.isNull()){
+        return std::nullopt;
+    }
+
+    auto pictures = file.complexProperties("PICTURE");
+
+    if (pictures.isEmpty()){
+        return std::nullopt;
+    }
+    
+    const auto& picture = pictures.front();
+
+    auto data = picture.find("data");
+    auto file_type = picture.find("mimeType");
+    auto description = picture.find("description");
+
+    if (data == picture.end() || file_type == picture.end()){
+        return std::nullopt;
+    }
+
+    auto image_bytes = data->second.toByteVector();
+
+    std::vector<std::uint8_t> bytes(
+        image_bytes.begin(),
+        image_bytes.end()
+    );
+    
+    std::string mime = file_type->second.toString().to8Bit();
+
+
+    std::string desc = "None";
+
+    if (description != picture.end()){
+        desc = description->second.toString().to8Bit();
+        
+    }
+
+    return CoverArt(std::move(bytes), std::move(mime), std::move(desc));
+}   
