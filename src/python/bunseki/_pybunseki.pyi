@@ -122,7 +122,7 @@ class CBunseki:
 
 class CoverArt:
     @property
-    def data(self) -> list[int]: ... # TODO converter para bytes do Python
+    def data(self) -> bytes: ... # TODO converter para bytes do Python
 
     @property
     def file_type(self) -> str: ...

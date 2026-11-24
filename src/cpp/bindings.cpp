@@ -196,7 +196,18 @@ void bind_cbunseki(py::module_& m){
 
 void bind_metadata(py::module_& m){
     py::class_<CoverArt>(m, "CoverArt")
-        .def_readonly("data", &CoverArt::data)
+        .def_property_readonly(
+            "data",
+            [](const CoverArt& self){
+                if (self.data.empty()){
+                    return py::bytes();
+                }
+                return py::bytes(
+                    reinterpret_cast<const char*>(self.data.data()),
+                    self.data.size()
+                );
+            }
+        )
         .def_readonly("file_type", &CoverArt::file_type)
         .def_readonly("description", &CoverArt::description);
         
