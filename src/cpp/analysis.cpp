@@ -8,7 +8,11 @@
 
 #include <bunseki/analysis.hpp>
 
-Analysis::Analysis(const std::vector<float>& samples) : samples(samples){}
+Analysis::Analysis(const std::vector<float>& samples) : samples(samples){
+    if (samples.empty()){
+        throw std::invalid_argument("Cannot analyze empty samples.");
+    }
+}
 
 // * PUBLIC
 
@@ -224,6 +228,9 @@ std::vector<std::size_t> Analysis::onset_detection(const std::vector<float>& rms
     }
     if (threshold <= 0){
         throw std::invalid_argument("Threshold must be a positive value");
+    }
+    if (min_spacing < 0){
+        throw std::invalid_argument("Threshold must be 0 or more");
     }
 
     std::vector<std::size_t> result;

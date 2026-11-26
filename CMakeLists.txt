@@ -84,3 +84,12 @@ install(TARGETS _pybunseki
     LIBRARY DESTINATION bunseki
     RUNTIME DESTINATION bunseki
 )
+
+# Testing
+
+include(CTest)
+
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests/cpp)
+endif()
