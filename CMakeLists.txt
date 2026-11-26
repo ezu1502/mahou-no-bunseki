@@ -12,7 +12,7 @@ find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
 find_package(taglib CONFIG REQUIRED
-    PATHS "C:/dev/vcpkg/installed/x64-windows/share/taglib"
+    PATHS "C:/dev/vcpkg/installed/x64-windows-static-md/share/taglib"
     NO_DEFAULT_PATH
 )
 
@@ -30,7 +30,7 @@ target_link_libraries(bunseki PUBLIC
     TagLib::tag
 )
 target_include_directories(bunseki PUBLIC
-    "C:/dev/vcpkg/installed/x64-windows/include"
+    "C:/dev/vcpkg/installed/x64-windows-static-md/include"
 )
 
 target_include_directories(bunseki
@@ -54,17 +54,6 @@ pybind11_add_module(_pybunseki
     src/cpp/bindings.cpp
 )
 
-set_target_properties(_pybunseki PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/python/bunseki"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/python/bunseki"
-
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/src/python/bunseki"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/src/python/bunseki"
-
-    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/python/bunseki"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/python/bunseki"
-)
-
 target_link_libraries(_pybunseki PRIVATE bunseki)
 
 add_custom_command(TARGET _pybunseki POST_BUILD
@@ -74,15 +63,16 @@ add_custom_command(TARGET _pybunseki POST_BUILD
     COMMAND_EXPAND_LISTS
 )
 
-add_custom_command(TARGET _pybunseki POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/dev/vcpkg/installed/x64-windows/bin/libz.dll"
-        "$<TARGET_FILE_DIR:_pybunseki>"
-)
+# add_custom_command(TARGET _pybunseki POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#         "C:/dev/vcpkg/installed/x64-windows-static-md/bin/libz.dll"
+#         "$<TARGET_FILE_DIR:_pybunseki>"
+# )
 
 install(TARGETS _pybunseki
     LIBRARY DESTINATION bunseki
     RUNTIME DESTINATION bunseki
+    # RUNTIME_DEPENDENCY_SET pybunseki_runtime
 )
 
 # Testing
