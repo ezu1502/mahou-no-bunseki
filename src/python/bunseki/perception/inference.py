@@ -4,8 +4,7 @@ from enum import Enum
 import numpy as np
 from .keys import Keys
 
-ROOT = Path(__file__).parents[4]
-MODELS_DATASET = ROOT / "datasets" / "models"
+MODELS_DATASET = Path(__file__).parent / "models"
 
 SOFTMAX_NEWEST = MODELS_DATASET / "softmax_regression_v2.npz"
 PERCEPTRON_NEWEST = MODELS_DATASET / "perceptron_v3.npz"

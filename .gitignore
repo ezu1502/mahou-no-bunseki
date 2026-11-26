@@ -18,8 +18,16 @@ test_tracks/
 *.env
 .venv/
 .venv-dataset/
+.venv_test/
+.venv313/
+.venv314/
 
-datasets/
+datasets/*
+!datasets/models/
+!datasets/models/**
 
+wheelhouse/
 
 build_command.txt
+
+/dist/

@@ -75,6 +75,20 @@ install(TARGETS _pybunseki
     # RUNTIME_DEPENDENCY_SET pybunseki_runtime
 )
 
+install(DIRECTORY src/python/bunseki/
+    DESTINATION bunseki
+    FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "*.pyi"
+    PATTERN "__pycache__" EXCLUDE
+)
+
+install(DIRECTORY datasets/models/
+    DESTINATION bunseki/perception/models
+    FILES_MATCHING 
+    PATTERN "*.npz"
+)
+
 # Testing
 
 include(CTest)

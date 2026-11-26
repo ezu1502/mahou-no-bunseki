@@ -11,8 +11,15 @@ version = "0.1.0"
 description = "Audio analysis library written in C++ and Python"
 requires-python = ">=3.13"
 readme = "README.md"
+dependencies = [
+    "numpy"
+]
 
 [tool.scikit-build]
 cmake.build-type = "Release"
 build-dir = "build/{wheel_tag}"
 wheel.packages = []
+cmake.args = [
+    "-DCMAKE_TOOLCHAIN_FILE=C:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake",
+    "-DVCPKG_TARGET_TRIPLET=x64-windows-static-md"
+]
